@@ -32,3 +32,8 @@ Other options: `--size` (center disc tip-to-tip, mm, default 70), `--scale`
   hole. Use the label of the hole that grips best as `--fit`.
 
 The minimum arm and gap width is 3 mm (`MIN_FEATURE` in the script).
+
+## Web version
+
+The same generator runs in the browser: see [`../web`](../web). A seed gives the same
+snowflake in both, since the web app reproduces Python's `random` and `hash()`.

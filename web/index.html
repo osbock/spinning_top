@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Generate laser-cut snowflake spinning tops as SVG: five stacked 6-fold symmetric discs on a dowel." />
+    <title>Snowflake Top Generator</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -10 20 20'%3E%3Cg stroke='%231e6fd9' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3Ccircle r='2.6' fill='%23fff' stroke='%231e6fd9' stroke-width='1.6'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Snowflake Top Generator</h1>
+      <div class="topbar-actions">
+        <button type="button" id="share" class="ghost">Copy link</button>
+        <button type="button" id="reset" class="ghost">Reset</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <form id="form" class="form" autocomplete="off" novalidate></form>
+
+      <section class="side" aria-label="Preview">
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" data-view="top" aria-selected="true">Cut sheet</button>
+          <button type="button" role="tab" data-view="assembled" aria-selected="false">Assembled</button>
+          <button type="button" role="tab" data-view="gallery" aria-selected="false">All styles</button>
+          <button type="button" role="tab" data-view="fit" aria-selected="false">Fit test</button>
+        </div>
+        <div id="preview" class="preview" title="Scroll to zoom, drag to pan, double-click to fit"></div>
+        <div class="nav">
+          <label class="check" id="wood-row"><input type="checkbox" id="wood" checked /> Wood preview</label>
+          <label class="check" id="spin-row" hidden><input type="checkbox" id="spin" checked /> Spin</label>
+          <span class="hint nav-hint">Scroll to zoom · drag to pan · double-click to fit</span>
+        </div>
+        <pre id="summary" class="summary"></pre>
+        <div id="log" class="log" role="status" aria-live="polite"></div>
+        <div class="actions">
+          <button type="button" id="dl-cut" class="primary">Download cut SVG</button>
+          <button type="button" id="dl-fit">Fit test SVG</button>
+          <button type="button" id="dl-zip">Everything (.zip)</button>
+        </div>
+        <p class="hint">
+          Cut lines are red 0.05 mm hairlines in millimetres; fit-test labels are blue fills to engrave.
+          Cut one center disc, two middle and two outer discs, then stack them on the dowel
+          with the center disc in the middle.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      Snowflake spinning tops · every disc is 6-fold symmetric, so it stays balanced
+      · <a href="https://github.com/osbock/spinning_top">source</a>
+    </footer>
+    <script type="module" src="/src/ui/main.ts"></script>
+  </body>
+</html>
