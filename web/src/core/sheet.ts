@@ -1,5 +1,6 @@
 // Sheet layout and SVG output, matching write_svg and fit_test in snowflake_top.py.
 import { bounds, buffer, difference, polygon, polygons, type Ring } from "./geometry";
+import { addTabs, type Line } from "./tabs";
 import { DEFAULT_PARAMS, type Disc, parseDowel, snowflake, type Style, STYLES } from "./snowflake";
 
 export interface Settings {
@@ -12,13 +13,15 @@ export interface Settings {
   minFeature: number;
   corner: number;
   gap: number;    // spacing between parts on the sheet
+  tabs: boolean;  // leave 2 uncut tabs per disc for a punch-out card
+  tabWidth: number; // mm, along the outline
   fitMin: number; fitMax: number; fitStep: number;
 }
 
 export const DEFAULTS: Settings = {
   styles: ["classic", "classic", "classic"],
   seed: 1, size: 70, scale: 0.74, dowel: "1/4in", fit: 0.15,
-  minFeature: 3, corner: 0.6, gap: 4,
+  minFeature: 3, corner: 0.6, gap: 4, tabs: false, tabWidth: 0.5,
   fitMin: -0.15, fitMax: 0.35, fitStep: 0.05,
 };
 
@@ -37,11 +40,22 @@ export function discD(d: Disc, dx: number, dy: number): string {
   return [d.poly.outer, ...d.poly.holes].map((r) => ringD(r, dx, dy)).join(" ");
 }
 
+function lineD(l: Line, dx: number, dy: number): string {
+  return "M" + l.pts.map(([x, y]) => `${f3(x + dx)},${f3(-y + dy)}`).join(" L") + (l.closed ? " Z" : "");
+}
+
+/** Cut lines for a disc with `tabWidth` mm tabs in its outer outline (0 = none). */
+export function tabbedD(d: Disc, tabWidth: number, dx: number, dy: number): string {
+  const outer = tabWidth > 0 ? addTabs(d.poly.outer, tabWidth) : [{ pts: d.poly.outer, closed: true }];
+  return [...outer, ...d.poly.holes.map((pts) => ({ pts, closed: true }))].map((l) => lineD(l, dx, dy)).join(" ");
+}
+
 const CUT = 'fill="none" stroke="#FF0000" stroke-width="0.05"';
 const WOOD = 'fill="#c9a87a" stroke="#6b4f2a" stroke-width="0.3"';
 
 /** Lay out rows of discs left to right; preview = filled wood instead of red hairlines. */
-export function writeSvg(rows: Disc[][], gap: number, preview = false): SvgSheet {
+/** tabWidth > 0 leaves punch-out tabs in the cut lines (ignored for the filled preview). */
+export function writeSvg(rows: Disc[][], gap: number, preview = false, tabWidth = 0): SvgSheet {
   const out: string[] = [];
   let y = gap, W = 0;
   for (const row of rows) {
@@ -50,7 +64,7 @@ export function writeSvg(rows: Disc[][], gap: number, preview = false): SvgSheet
     let x = gap;
     row.forEach((d, i) => {
       const [minx, , maxx] = bs[i];
-      out.push(`  <path d="${discD(d, x - minx, y + h / 2)}"/>`);
+      out.push(`  <path d="${preview ? discD(d, x - minx, y + h / 2) : tabbedD(d, tabWidth, x - minx, y + h / 2)}"/>`);
       x += maxx - minx + gap;
     });
     W = Math.max(W, x);
@@ -91,10 +105,11 @@ export function buildTop(s: Settings): Build {
   const diameters = diametersFor(s);
   const discs = diameters.map((d, i) => snowflake(d / 2, s.styles[i], s.seed, paramsFor(s, hole)));
   const parts = [discs[0], discs[1], discs[1], discs[2], discs[2]];
-  const cut = writeSvg([parts], s.gap);
+  const cut = writeSvg([parts], s.gap, false, s.tabs ? s.tabWidth : 0);
   const preview = writeSvg([parts], s.gap, true);
   const lines = [`Dowel ${dowelMm.toFixed(2)} mm → hole cut at ${hole.toFixed(2)} mm`];
   TIERS.forEach((t, i) => lines.push(`${`${t} ×${COUNTS[i]}`.padEnd(10)} ${diameters[i].toFixed(1)} mm  (${s.styles[i]})`));
+  if (s.tabs) lines.push(`Tabs      2 × ${s.tabWidth.toFixed(2)} mm per disc, between arms`);
   lines.push(`Sheet ${cut.w.toFixed(0)} × ${cut.h.toFixed(0)} mm`);
   return { dowelMm, hole, diameters, discs, cut, preview, summary: lines.join("\n") };
 }

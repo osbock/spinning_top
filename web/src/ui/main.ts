@@ -5,7 +5,7 @@ import { type Style, STYLES } from "../core/snowflake";
 import { Preview } from "./preview";
 import "./style.css";
 
-type NumKey = Exclude<keyof Settings, "styles" | "dowel">;
+type NumKey = Exclude<keyof Settings, "styles" | "dowel" | "tabs">;
 interface NumSpec { key: NumKey; label: string; step: number; min: number; max: number; int?: boolean }
 
 const STYLE_HELP: Record<Style, string> = {
@@ -21,6 +21,7 @@ const NUMBERS: Record<string, NumSpec[]> = {
     { key: "size", label: "Center disc, tip to tip (mm)", step: 1, min: 15, max: 400 },
     { key: "scale", label: "Size ratio between tiers", step: 0.01, min: 0.3, max: 1 },
   ],
+  Tabs: [{ key: "tabWidth", label: "Tab width (mm)", step: 0.1, min: 0.05, max: 5 }],
   Advanced: [
     { key: "minFeature", label: "Thinnest arm or gap (mm)", step: 0.5, min: 0.5, max: 10 },
     { key: "corner", label: "Corner rounding (mm)", step: 0.1, min: 0, max: 3 },
@@ -55,6 +56,7 @@ const allStyles = document.createElement("select");
 const numInputs = new Map<NumKey, HTMLInputElement>();
 const dowelInput = document.createElement("input");
 const holeHint = document.createElement("p");
+const tabsInput = document.createElement("input");
 
 function sanitize(data: Record<string, unknown>): Settings {
   const s: Settings = { ...DEFAULTS, styles: [...DEFAULTS.styles] };
@@ -62,6 +64,7 @@ function sanitize(data: Record<string, unknown>): Settings {
     s.styles = data.styles as Settings["styles"];
   }
   if (typeof data.dowel === "string" && data.dowel.trim()) s.dowel = data.dowel;
+  if (typeof data.tabs === "boolean") s.tabs = data.tabs;
   for (const { key } of ALL_NUMBERS) {
     const v = data[key];
     if (typeof v === "number" && Number.isFinite(v)) s[key] = v;
@@ -76,6 +79,7 @@ function fromHash(): Record<string, unknown> | null {
   for (const [k, v] of h) {
     if (k === "styles") out.styles = v.split(",");
     else if (k === "dowel") out.dowel = v;
+    else if (k === "tabs") out.tabs = v === "1";
     else out[k] = Number(v);
   }
   return out;
@@ -85,6 +89,7 @@ function toHash(s: Settings): string {
   const h = new URLSearchParams();
   if (s.styles.join() !== DEFAULTS.styles.join()) h.set("styles", s.styles.join(","));
   if (s.dowel !== DEFAULTS.dowel) h.set("dowel", s.dowel);
+  if (s.tabs !== DEFAULTS.tabs) h.set("tabs", s.tabs ? "1" : "0");
   for (const { key } of ALL_NUMBERS) if (s[key] !== DEFAULTS[key]) h.set(key, String(s[key]));
   return h.toString().replace(/%2C/g, ",");
 }
@@ -226,6 +231,22 @@ function buildForm(): void {
     fieldRow("Press fit (mm)", numberInput(ALL_NUMBERS[1]), "How much smaller than the dowel to cut the hole; negative is looser"),
     holeHint));
 
+  tabsInput.type = "checkbox";
+  tabsInput.id = "f-tabs";
+  tabsInput.addEventListener("change", () => {
+    settings.tabs = tabsInput.checked;
+    changed();
+  });
+  const tabsRow = document.createElement("label");
+  tabsRow.className = "check";
+  tabsRow.append(tabsInput, " Add 2 tabs per disc");
+  form.append(fieldset("Punch-out tabs", tabsRow, ...NUMBERS.Tabs.map((s) => fieldRow(s.label, numberInput(s))),
+    Object.assign(document.createElement("p"), {
+      className: "hint",
+      textContent: "Leaves short uncut bridges in each disc's outline, in opposite gaps between the arms next to the " +
+        "center plate, so the discs stay in the sheet until punched out. Not kerf-corrected.",
+    })));
+
   form.append(fieldset("Fit test strip", ...NUMBERS["Fit test strip"].map((s) => fieldRow(s.label, numberInput(s))),
     Object.assign(document.createElement("p"), {
       className: "hint",
@@ -244,6 +265,8 @@ function syncForm(): void {
     input.classList.remove("bad");
   }
   if (document.activeElement !== dowelInput) dowelInput.value = settings.dowel;
+  tabsInput.checked = settings.tabs;
+  numInputs.get("tabWidth")!.disabled = !settings.tabs;
   $("style-hint").textContent = [...new Set(settings.styles)].map((s) => STYLE_HELP[s]).join(". ") + ".";
 }
 

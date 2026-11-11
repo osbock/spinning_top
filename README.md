@@ -14,7 +14,8 @@ Laser cut spinning top designs and generator
 [`web/`](web/) is a TypeScript version of the snowflake generator that runs in the browser
 and publishes to GitHub Pages: pick styles per tier, a seed, size and dowel, see the cut
 sheet, an assembled (spinning) view, every style at once and the fit-test strip, then
-download the SVGs. Settings live in the URL, so a link reopens the exact top.
+download the SVGs. An option leaves two punch-out tabs per disc (0.5 mm by default) in
+opposite gaps between the arms, beside the center plate. Settings live in the URL, so a link reopens the exact top.
 
 ```
 cd web
