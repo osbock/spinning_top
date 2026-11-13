@@ -14,6 +14,8 @@ const STYLE_HELP: Record<Style, string> = {
   random: "Random: seeded branches and tip ornaments",
   plate: "Plate: a sectored hexagonal plate with windows",
   crystal: "Crystal: a hex-grid growth automaton; the seed picks the rule",
+  circle: "Circle: a plain round disc",
+  hexagon: "Hexagon: a plain hexagonal disc with rounded corners",
 };
 const DOWELS = ["1/8in", "3/16in", "1/4in", "5/16in", "3/8in", "3mm", "4mm", "5mm", "6mm", "8mm", "10mm"];
 const NUMBERS: Record<string, NumSpec[]> = {
@@ -244,7 +246,8 @@ function buildForm(): void {
     Object.assign(document.createElement("p"), {
       className: "hint",
       textContent: "Leaves short uncut bridges in each disc's outline, in opposite gaps between the arms next to the " +
-        "center plate, so the discs stay in the sheet until punched out. Not kerf-corrected.",
+        "center plate (top and bottom edge on circles and hexagons), so the discs stay in the sheet until punched out. " +
+        "Not kerf-corrected.",
     })));
 
   form.append(fieldset("Fit test strip", ...NUMBERS["Fit test strip"].map((s) => fieldRow(s.label, numberInput(s))),

@@ -18,7 +18,9 @@ python3 snowflake_top.py --dowel 3/16in --fit 0.1          # dowel size (mm or i
 python3 snowflake_top.py --fit-test --dowel 1/4in          # strip of test holes
 ```
 
-Styles: `classic`, `fractal`, `random`, `plate`, `crystal` (Packard hex-grid automaton).
+Styles: `classic`, `fractal`, `random`, `plate`, `crystal` (Packard hex-grid automaton),
+plus plain `circle` and `hexagon` discs, which mix with the snowflakes
+(e.g. `--style hexagon,classic,circle`).
 
 Other options: `--size` (center disc tip-to-tip, mm, default 70), `--scale`
 (size ratio between tiers, default 0.74), `--fit-range min,max,step`, `--out`.

@@ -109,7 +109,7 @@ export function buildTop(s: Settings): Build {
   const preview = writeSvg([parts], s.gap, true);
   const lines = [`Dowel ${dowelMm.toFixed(2)} mm → hole cut at ${hole.toFixed(2)} mm`];
   TIERS.forEach((t, i) => lines.push(`${`${t} ×${COUNTS[i]}`.padEnd(10)} ${diameters[i].toFixed(1)} mm  (${s.styles[i]})`));
-  if (s.tabs) lines.push(`Tabs      2 × ${s.tabWidth.toFixed(2)} mm per disc, between arms`);
+  if (s.tabs) lines.push(`Tabs      2 × ${s.tabWidth.toFixed(2)} mm per disc, opposite each other`);
   lines.push(`Sheet ${cut.w.toFixed(0)} × ${cut.h.toFixed(0)} mm`);
   return { dowelMm, hole, diameters, discs, cut, preview, summary: lines.join("\n") };
 }

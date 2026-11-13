@@ -2,7 +2,7 @@
 // in opposite valleys between arms, next to the centre plate rather than on an arm.
 import { describe, expect, it } from "vitest";
 import { buildTop, DEFAULTS, diametersFor } from "../src/core/sheet";
-import { snowflake, STYLES } from "../src/core/snowflake";
+import { isPlain, snowflake, STYLES } from "../src/core/snowflake";
 import { addTabs, rayHit, TAB_ANGLES } from "../src/core/tabs";
 
 const dist = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -23,13 +23,14 @@ describe("punch-out tabs", () => {
             expect(gap).toBeGreaterThan(0.45);
             expect(gap).toBeLessThanOrEqual(0.5 + 1e-9);
           }
-          // Tabs sit in the valley between arms, inside the arms' reach, opposite each other.
+          // Tabs sit opposite each other, in the valley between arms, inside the arms' reach (snowflakes).
           const hits = TAB_ANGLES.map((a) => rayHit(disc.poly.outer, a)!);
           for (const h of hits) {
             const r = Math.hypot(...h.point);
             process.env.TAB_REPORT && process.stderr.write(`${style} ${seed} R=${R.toFixed(1)} r/R=${(r / R).toFixed(2)}\n`);
             expect(Math.abs(h.point[0])).toBeLessThan(1e-6); // straight up / down: a valley, not an arm
-            expect(r).toBeLessThan(0.75 * R);
+            if (isPlain(style)) expect(r).toBeGreaterThan(0.8 * R); // plain shapes: on the edge itself
+            else expect(r).toBeLessThan(0.75 * R);
           }
         });
       });

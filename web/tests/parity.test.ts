@@ -25,7 +25,7 @@ const CASES: Case[] = [];
 for (const style of STYLES) {
   for (const seed of [1, 2, 3, 7, 42]) {
     for (const R of [35, 25.9, 19.166]) CASES.push([R, style, seed, 6.2]);
-    if (style === "classic" || style === "plate" || style === "fractal") break; // seed-independent
+    if (style !== "random" && style !== "crystal") break; // seed-independent
   }
 }
 CASES.push([40, "random", 11, 4.6], [30, "crystal", 5, 7.8], [20, "fractal", 1, 4.6]);

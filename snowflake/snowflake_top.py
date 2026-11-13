@@ -12,7 +12,8 @@ Examples
   python3 snowflake_top.py --gallery                # preview of every style
   python3 snowflake_top.py --dowel 3/16in           # or --dowel 5 (mm); --fit sets press-fit
   python3 snowflake_top.py --fit-test --dowel 1/4in # strip of test holes to find your --fit
-Styles: classic, fractal, random, plate, crystal
+  python3 snowflake_top.py --style hexagon,classic,circle # plain shapes mix in too
+Styles: classic, fractal, random, plate, crystal, plus plain circle and hexagon
 """
 import argparse, math, random
 import numpy as np
@@ -189,6 +190,11 @@ def style_crystal(R, rng):
 STYLES = {"classic": style_classic, "fractal": style_fractal, "random": style_random,
           "plate": style_plate, "crystal": style_crystal}
 
+# Plain discs: no arms, just the outline (a hexagon has a corner where a snowflake has an arm).
+# The circle has 96 sides, a multiple of 6, so it keeps the same 6-fold symmetry.
+PLAIN = {"circle": lambda R: Point(0, 0).buffer(R, 24), "hexagon": lambda R: hexagon(0, 0, R)}
+SHAPES = list(STYLES) + list(PLAIN)
+
 # ---------- assembly ----------
 def largest(g):
     """Keep only the piece attached to the hub."""
@@ -198,6 +204,11 @@ def largest(g):
 
 def snowflake(R, style="classic", seed=1):
     global SEED
+    if style in PLAIN:
+        shape = PLAIN[style](R)
+        if style == "hexagon" and CORNER:
+            shape = shape.buffer(-CORNER, join_style=2).buffer(CORNER)   # round the corners
+        return shape.difference(Point(0, 0).buffer(HOLE / 2, 64))
     SEED = seed
     rng = random.Random(seed * 1000 + round(R * 10))
     half = STYLES[style](R, rng).buffer(0)
@@ -306,13 +317,13 @@ def main():
 
     diam = [a.size, a.size * a.scale, a.size * a.scale ** 2]
     if a.gallery:
-        rows = [[snowflake(d / 2, st, a.seed) for d in diam] for st in STYLES]
+        rows = [[snowflake(d / 2, st, a.seed) for d in diam] for st in SHAPES]
         write_svg(rows, "gallery.svg", preview=True)
-        print("wrote gallery.svg  (rows top to bottom: " + ", ".join(STYLES) + ")")
+        print("wrote gallery.svg  (rows top to bottom: " + ", ".join(SHAPES) + ")")
         return
     styles = a.style.split(",")
     styles = styles * 3 if len(styles) == 1 else styles
-    assert len(styles) == 3 and all(s in STYLES for s in styles), f"styles: {list(STYLES)}"
+    assert len(styles) == 3 and all(s in SHAPES for s in styles), f"styles: {SHAPES}"
     c, m, o = (snowflake(d / 2, st, a.seed) for d, st in zip(diam, styles))
     parts = [c, m, m, o, o]
     W, H = write_svg([parts], a.out)

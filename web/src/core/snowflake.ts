@@ -8,8 +8,11 @@ import {
 } from "./geometry";
 import { PyRandom, pyHash, pyRound } from "./pyrandom";
 
-export const STYLES = ["classic", "fractal", "random", "plate", "crystal"] as const;
+/** Snowflakes, then the plain shapes (a circle, and a hexagon with a corner where a snowflake has an arm). */
+export const STYLES = ["classic", "fractal", "random", "plate", "crystal", "circle", "hexagon"] as const;
 export type Style = (typeof STYLES)[number];
+export const PLAIN_STYLES: readonly Style[] = ["circle", "hexagon"];
+export const isPlain = (s: Style) => PLAIN_STYLES.includes(s);
 
 /** The module-level constants of the Python script, as options. All lengths in mm. */
 export interface Params {
@@ -222,7 +225,13 @@ function lexLess(a: number[], b: number[]): boolean {
   return false;
 }
 
-const STYLE_FNS: Record<Style, StyleFn> = { classic, fractal, random, plate, crystal };
+const STYLE_FNS: Record<Exclude<Style, "circle" | "hexagon">, StyleFn> = { classic, fractal, random, plate, crystal };
+
+/** A plain disc. The circle has 96 sides, a multiple of 6, so it keeps the 6-fold symmetry. */
+function plainDisc(R: number, style: "circle" | "hexagon", c: Ctx): Shape {
+  if (style === "circle") return circle(0, 0, R, 24);
+  return c.corner ? buffer(polygon(insetConvex(hexRing(0, 0, R), c.corner)), c.corner) : hexagon(0, 0, R);
+}
 
 // ---------- assembly ----------
 export interface Disc {
@@ -234,6 +243,10 @@ export interface Disc {
 /** One disc of tip-to-tip diameter 2R, centred on the origin (y up). */
 export function snowflake(R: number, style: Style = "classic", seed = 1, params: Params = DEFAULT_PARAMS): Disc {
   const c: Ctx = { ...params, seed };
+  if (style === "circle" || style === "hexagon") {
+    const shape = difference(plainDisc(R, style, c), circle(0, 0, c.hole / 2, 64));
+    return { shape, poly: polygons(shape)[0] };
+  }
   const rng = new PyRandom(seed * 1000 + pyRound(R * 10));
   let half = STYLE_FNS[style](R, rng, c);
   half = intersection(half, polygon([[-R, 0], [2 * R, 0], [2 * R, 2 * R], [-R, 2 * R]]));

@@ -27,6 +27,19 @@ describe("sheets", () => {
       expect(d.poly.holes.length).toBeGreaterThanOrEqual(1);
     }
   });
+  it("plain circle and hexagon discs fill their outline", () => {
+    const b = buildTop({ ...DEFAULTS, styles: ["hexagon", "circle", "classic"] });
+    const [hex, circ] = b.discs;
+    const R = 35, r = 70 * 0.74 / 2;
+    // Rounded-corner hexagon: a bit under the sharp hexagon's area, tip to tip still about 2R.
+    const sharpHex = (3 * Math.sqrt(3) / 2) * R * R, hole = Math.PI * 3.1 ** 2;
+    expect(area(hex.shape)).toBeLessThan(sharpHex - hole);
+    expect(area(hex.shape)).toBeGreaterThan(sharpHex - hole - 1);
+    expect(Math.max(...hex.poly.outer.map(([x, y]) => Math.hypot(x, y)))).toBeCloseTo(R, 0);
+    expect(area(circ.shape) / (Math.PI * r * r - hole)).toBeCloseTo(1, 2);
+    for (const d of [hex, circ]) expect(d.poly.holes).toHaveLength(1);
+    expect(b.summary).toContain("(hexagon)");
+  });
   it("rejects a fit bigger than the dowel", () => {
     expect(() => buildTop({ ...DEFAULTS, dowel: "3mm", fit: 3 })).toThrow();
   });
